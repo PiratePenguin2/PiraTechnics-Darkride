@@ -1,42 +1,33 @@
-#define DE_PIN 4   // GPIO for Driver Enable
-#define RE_PIN 5   // GPIO for Receiver Enable
+#define MAX485_DE_RE 4  // Pin to control DE and RE (TX and RX mode)
+#define TX_PIN 17       // ESP32 TX pin
+#define RX_PIN 16       // ESP32 RX pin
 
 void setup() {
-  // Start Serial for debugging
-  Serial.begin(115200);
-  Serial.println("Main Serial Started");
-  
-  // Start the RS-485 serial communication (9600 baud)
-  Serial2.begin(9600, SERIAL_8N1, 16, 17);  // RX = GPIO16, TX = GPIO17
-  
-  // Set DE/RE pins as outputs
-  pinMode(DE_PIN, OUTPUT);
-  pinMode(RE_PIN, OUTPUT);
-  
-  // Start in receive mode
-  digitalWrite(DE_PIN, LOW);
-  digitalWrite(RE_PIN, LOW);
+  Serial.begin(115200);    // Serial Monitor for debugging
+  Serial2.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);  // Use Serial2 for communication with MAX485
+
+  pinMode(MAX485_DE_RE, OUTPUT);
+  digitalWrite(MAX485_DE_RE, LOW);  // Set to receive mode
+
+  Serial.println("MAX485 Loopback Test Initialized");
 }
 
 void loop() {
-  // Send data over RS-485
-  digitalWrite(DE_PIN, HIGH);  // Enable transmitter
-  digitalWrite(RE_PIN, HIGH);  // Disable receiver
-  
-  // Use Serial2.write to send raw data as bytes
-  const char* message = "Hello, RS-485!";
-  Serial2.write(message, strlen(message));  // Send the message over RS-485
-  delay(10);
-  
-  // Switch to receive mode
-  digitalWrite(DE_PIN, LOW);  // Disable transmitter
-  digitalWrite(RE_PIN, LOW);  // Enable receiver
-  
-  // Receive data
-  if (Serial2.available()) {
-    String received = Serial2.readString();
-    Serial.println("Received: " + received);
+  // Transmit Mode
+  digitalWrite(MAX485_DE_RE, HIGH);  // Enable transmit
+  Serial2.write("Hello, MAX485");
+  Serial.println("Sent: Hello, MAX485");
+  delay(1000);
+
+  // Receive Mode
+  digitalWrite(MAX485_DE_RE, LOW);  // Enable receive
+  delay(100);  // Allow time for response
+
+  while (Serial2.available()) {
+    char receivedChar = Serial2.read();
+    Serial.print("Received: ");
+    Serial.println(receivedChar);
   }
-  
-  delay(1000);  // Wait for a second before sending again
+
+  delay(2000);
 }
