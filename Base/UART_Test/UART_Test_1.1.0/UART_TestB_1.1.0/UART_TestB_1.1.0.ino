@@ -1,30 +1,41 @@
-//Slave
 #include <HardwareSerial.h>
-
-HardwareSerial SerialPort(2); // use UART2
-
-void setup()
+HardwareSerial SerialPort(2);
+const int Enable =  2;
+const int SlaveNumber = 1;
+int Slave;
+const int LED = 4;
+void setup() 
+{ 
+  Serial.begin(115200);
+  SerialPort.begin(115200, SERIAL_8N1, 16, 17); 
+  SerialPort.setTimeout(250);
+  pinMode(Enable, OUTPUT);
+  pinMode(LED, OUTPUT);
+  digitalWrite(Enable, LOW);
+  digitalWrite(LED, LOW);
+} 
+void loop() 
 {
-  SerialPort.begin(15200, SERIAL_8N1, 16, 17);
-  Serial.begin(9600);
-}
-
-void loop()
-{
-  if (SerialPort.available())
+  digitalWrite(Enable, LOW); 
+  if(SerialPort.available())
   {
-    char number = SerialPort.read();
-    Serial.print("Received: ");
-    Serial.println(number);
-
-    // Send a response back to the master based on the received number
-    if (number == '0') {
-      SerialPort.print('0');  // Respond back
-      Serial.println("Sent: 0");
+      Slave = SerialPort.parseInt();
+      Serial.println(Slave);
+      if(Slave == SlaveNumber)
+      {   
+        String command = SerialPort.readString();  
+          Serial.println(command);
+           if(command == "ON")
+           {
+              //digitalWrite(LED, HIGH);
+              //Serial.println("HIGH");
+              delay(500);
+              //digitalWrite(LED, LOW);
+              //Serial.println("LOW");
+            }
+              digitalWrite(Enable, HIGH);
+              SerialPort.println("Slave 1 is triggered");   
+           }
+           //Serial.println("loop");/
+        }   
     }
-    if (number == '1') {
-      SerialPort.print('1');  // Respond back
-      Serial.println("Sent: 1");
-    }
-  }
-}
